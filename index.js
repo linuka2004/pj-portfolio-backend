@@ -7,6 +7,9 @@ import cors from "cors"
 import dotenv from "dotenv"
 import reviewRouter from "./routes/reviewRouter.js"
 
+import User from "./models/User.js";
+import bcrypt from "bcrypt";
+
 
 dotenv.config()  // load the .env file contents
 
@@ -14,11 +17,41 @@ const mongoURI = process.env.MONGO_URL  // read the MONGO_URL value from .env fi
 
 
 
-mongoose.connect(mongoURI).then(
-    ()=>{
-        console.log("Connected to MongoDB Cluster")
-    }
-)
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => {
+        console.log("Connected to MongoDB Cluster");
+        // Ensure default admin user exists
+        (async () => {
+            const adminEmail = "linuka@gmail.com";
+            const adminPassword = "linu123";
+            const adminFirstName = "Admin";
+            const adminLastName = "User";
+            const adminRole = "admin";
+            const adminImage = "/default.jpg";
+
+            const existingAdmin = await User.findOne({ email: adminEmail });
+            if (!existingAdmin) {
+                const hashedPassword = bcrypt.hashSync(adminPassword, 10);
+                await User.create({
+                    email: adminEmail,
+                    firstName: adminFirstName,
+                    lastName: adminLastName,
+                    password: hashedPassword,
+                    role: adminRole,
+                    isBlocked: false,
+                    isEmailVerified: true,
+                    image: adminImage
+                });
+                console.log("Default admin user created.");
+            } else {
+                console.log("Default admin user already exists.");
+            }
+        })();
+    })
+    .catch((err) => {
+        console.error("Failed to connect to MongoDB:", err);
+        process.exit(1);
+    });
 
 
 const app = express()
