@@ -150,3 +150,61 @@ export async function createMaterial(req, res) {
     res.status(500).json({ message: "Error creating material", error: error.message });
   }
 }
+
+export async function deleteMaterial(req, res) {
+  if (!isAdmin(req)) {
+    res.status(403).json({ message: "Forbidden" });
+    return;
+  }
+
+  const { materialId } = req.params;
+
+  try {
+    const material = await Material.findById(materialId);
+    if (!material) {
+      res.status(404).json({ message: "Material not found" });
+      return;
+    }
+
+    // Delete all stock records associated with this material
+    await DailyStockRecord.deleteMany({ material: material._id });
+
+    // Delete the material
+    await Material.findByIdAndDelete(materialId);
+
+    res.status(200).json({ message: "Material and its records deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting material", error: error.message });
+  }
+}
+
+export async function deleteDailyStockRecord(req, res) {
+  if (!isAdmin(req)) {
+    res.status(403).json({ message: "Forbidden" });
+    return;
+  }
+
+  const { materialId, recordId } = req.params;
+
+  try {
+    const material = await Material.findById(materialId);
+    if (!material) {
+      res.status(404).json({ message: "Material not found" });
+      return;
+    }
+
+    const record = await DailyStockRecord.findOneAndDelete({
+      _id: recordId,
+      material: material._id,
+    });
+
+    if (!record) {
+      res.status(404).json({ message: "Stock record not found" });
+      return;
+    }
+
+    res.status(200).json({ message: "Stock record deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting stock record", error: error.message });
+  }
+}
