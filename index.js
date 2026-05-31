@@ -6,6 +6,7 @@ import productRouter from "./routes/productRouter.js"
 import cors from "cors"
 import dotenv from "dotenv"
 import reviewRouter from "./routes/reviewRouter.js"
+import materialRouter from "./routes/materialRouter.js"
 
 import User from "./models/User.js";
 import bcrypt from "bcrypt";
@@ -103,6 +104,7 @@ app.use(
 app.use ("/api/users",userRouter)
 app.use("/api/products",productRouter)
 app.use("/api/reviews",reviewRouter)
+app.use("/api/materials", materialRouter)
 
 
 app.listen(5000 , 
