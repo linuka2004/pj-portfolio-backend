@@ -123,3 +123,30 @@ export async function getDailyStockRecords(req, res) {
     res.status(500).json({ message: "Error fetching daily stock records", error: error.message });
   }
 }
+
+export async function createMaterial(req, res) {
+  if (!isAdmin(req)) {
+    res.status(403).json({ message: "Forbidden" });
+    return;
+  }
+
+  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  const description = typeof req.body?.description === "string" ? req.body.description.trim() : "";
+
+  if (!name) {
+    res.status(400).json({ message: "Material name is required" });
+    return;
+  }
+
+  try {
+    const material = await Material.create({ name, description });
+    res.status(201).json(material);
+  } catch (error) {
+    if (error?.code === 11000) {
+      res.status(409).json({ message: "Material already exists" });
+      return;
+    }
+
+    res.status(500).json({ message: "Error creating material", error: error.message });
+  }
+}
